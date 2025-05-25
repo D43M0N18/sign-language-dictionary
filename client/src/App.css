@@ -1,0 +1,68 @@
+body {
+  background: #f8fafc;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+h1 {
+  font-weight: 700;
+  color: #2c3e50;
+  text-align: center;
+  margin-top: 2rem;
+  margin-bottom: 1.5rem;
+  letter-spacing: 1px;
+}
+
+.custom-search {
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.05);
+}
+
+.custom-card {
+  border-radius: 18px;
+  box-shadow: 0 4px 16px rgba(44, 62, 80, 0.08);
+  transition: box-shadow 0.2s;
+  border: none;
+}
+
+.custom-card:hover {
+  box-shadow: 0 8px 24px rgba(44, 62, 80, 0.16);
+}
+
+.custom-word {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #007bff;
+  margin-bottom: 0.5rem;
+}
+
+.custom-definition {
+  font-size: 1rem;
+  color: #444;
+  margin-bottom: 0.75rem;
+}
+
+.custom-img {
+  border-radius: 10px;
+  max-height: 120px;
+  object-fit: cover;
+  background: #e9ecef;
+}
+
+@media (max-width: 768px) {
+  .custom-card {
+    margin-bottom: 1.5rem;
+  }
+
+  .custom-img {
+    max-height: 90px;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+}
