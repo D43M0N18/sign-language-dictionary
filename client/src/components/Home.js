@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 function Home() {
@@ -11,27 +11,32 @@ function Home() {
         imageUrl: '',
         videoUrl: ''
     });
+    const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        fetchWords();
-    }, []);
-
-    const fetchWords = async () => {
+    const fetchWords = useCallback(async () => {
         try {
+            setIsLoading(true);
             const res = await axios.get('http://localhost:5000/words');
             setWords(res.data);
         } catch (error) {
             console.error('Failed to fetch words', error);
+        } finally {
+            setIsLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        fetchWords();
+    }, [fetchWords]);
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this word?')) return;
+        if (!window.confirm('Are you sure you want to delete this sign?')) return;
         try {
             await axios.delete(`http://localhost:5000/words/${id}`);
             setWords(words.filter(word => word._id !== id));
         } catch (error) {
             console.error('Failed to delete word', error);
+            alert('Failed to delete sign. Please try again.');
         }
     };
 
@@ -52,11 +57,12 @@ function Home() {
     const handleEditSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.put(`http://localhost:5000/words/${editingWord}`, editForm);
-            setWords(words.map(w => (w._id === editingWord ? { ...w, ...editForm } : w)));
+            const response = await axios.put(`http://localhost:5000/words/${editingWord}`, editForm);
+            setWords(words.map(w => (w._id === editingWord ? response.data : w)));
             setEditingWord(null);
         } catch (error) {
             console.error('Failed to update word', error);
+            alert('Failed to update sign. Please try again.');
         }
     };
 
@@ -68,72 +74,84 @@ function Home() {
         w.word.toLowerCase().includes(search.toLowerCase())
     );
 
-    return (
-        <div className="container my-4">
-            <input
-                type="text"
-                className="form-control mb-3 custom-search"
-                placeholder="Search words..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-            />
+    if (isLoading) {
+        return (
+            <div className="loading-container">
+                <div className="loading-spinner"></div>
+                <p>Loading signs...</p>
+            </div>
+        );
+    }
 
-            <div className="row">
+    return (
+        <div className="home-container">
+            <div className="search-container">
+                <input
+                    type="text"
+                    className="custom-search"
+                    placeholder="Search signs..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                />
+            </div>
+
+            <div className="words-grid">
                 {filtered.map(w => (
-                    <div key={w._id} className="col-12 col-md-6 col-lg-4 mb-4">
-                        <div className="card custom-card h-100">
-                            <div className="card-body">
-                                {editingWord === w._id ? (
-                                    <form onSubmit={handleEditSubmit}>
-                                        <input
-                                            className="form-control mb-2"
-                                            name="word"
-                                            value={editForm.word}
-                                            onChange={handleEditChange}
-                                            required
-                                        />
-                                        <input
-                                            className="form-control mb-2"
-                                            name="definition"
-                                            value={editForm.definition}
-                                            onChange={handleEditChange}
-                                            required
-                                        />
-                                        <input
-                                            className="form-control mb-2"
-                                            name="imageUrl"
-                                            value={editForm.imageUrl}
-                                            onChange={handleEditChange}
-                                        />
-                                        <input
-                                            className="form-control mb-2"
-                                            name="videoUrl"
-                                            value={editForm.videoUrl}
-                                            onChange={handleEditChange}
-                                        />
-                                        <button className="btn btn-success btn-sm me-2" type="submit">Save</button>
-                                        <button className="btn btn-secondary btn-sm" type="button" onClick={handleCancelEdit}>Cancel</button>
-                                    </form>
-                                ) : (
-                                    <>
-                                        <h5 className="card-title custom-word">{w.word}</h5>
-                                        <p className="card-text custom-definition">{w.definition}</p>
-                                        {w.imageUrl && (
-                                            <img src={w.imageUrl} alt={w.word} className="img-fluid mb-2 custom-img" />
-                                        )}
-                                        <div>
-                                            {w.videoUrl && (
-                                                <a href={w.videoUrl} className="btn btn-primary btn-sm me-2" target="_blank" rel="noopener noreferrer">
-                                                    Video
-                                                </a>
-                                            )}
-                                            <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(w)}>Edit</button>
-                                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(w._id)}>Delete</button>
-                                        </div>
-                                    </>
+                    <div key={w._id} className="word-card">
+                        {editingWord === w._id ? (
+                            <form onSubmit={handleEditSubmit} className="edit-form">
+                                <input
+                                    className="form-input"
+                                    name="word"
+                                    value={editForm.word}
+                                    onChange={handleEditChange}
+                                    required
+                                />
+                                <textarea
+                                    className="form-input"
+                                    name="definition"
+                                    value={editForm.definition}
+                                    onChange={handleEditChange}
+                                    required
+                                    rows="3"
+                                />
+                                <input
+                                    className="form-input"
+                                    name="imageUrl"
+                                    value={editForm.imageUrl}
+                                    onChange={handleEditChange}
+                                />
+                                <input
+                                    className="form-input"
+                                    name="videoUrl"
+                                    value={editForm.videoUrl}
+                                    onChange={handleEditChange}
+                                />
+                                <div className="button-group">
+                                    <button className="btn btn-success" type="submit">Save</button>
+                                    <button className="btn btn-secondary" type="button" onClick={handleCancelEdit}>Cancel</button>
+                                </div>
+                            </form>
+                        ) : (
+                            <div className="word-content">
+                                <h3 className="custom-word">{w.word}</h3>
+                                <p className="custom-definition">{w.definition}</p>
+                                {w.imageUrl && (
+                                    <div className="image-container">
+                                        <img src={w.imageUrl} alt={w.word} className="custom-img" />
+                                    </div>
                                 )}
+                                <div className="button-group">
+                                    {w.videoUrl && (
+                                        <a href={w.videoUrl} className="btn btn-primary" target="_blank" rel="noopener noreferrer">
+                                            Watch Video
+                                        </a>
+                                    )}
+                                    <button className="btn btn-warning" onClick={() => handleEdit(w)}>Edit</button>
+                                    <button className="btn btn-danger" onClick={() => handleDelete(w._id)}>Delete</button>
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 ))}
             </div>
